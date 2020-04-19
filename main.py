@@ -33,8 +33,8 @@ import matplotlib.pyplot as plt
 
 
 a = 5
-N = 2 ** 10
-M = 2 ** 14
+N = 2 ** 8
+M = 2 ** 12
 b = np.square(N) / (4 * a * M)
 hx = a * 2 / N
 hF = b * 2 / N
@@ -64,8 +64,8 @@ def fin_fft_3d(hx,zf,N,M):
 def core_2d(Xi, x):
     return np.exp(-2j * np.pi * x * Xi)
 
-def core_3d(Xi,x1,x2):
-    return np.exp(-2j*np.pi*Xi*x1*x2)
+def core_3d(Xi1,Xi2,x1,x2):
+    return np.exp(-2j*np.pi*Xi1*Xi2*x1*x2)
 
 
 def int_fourier_2d(X, Xi, h, func):
@@ -74,10 +74,16 @@ def int_fourier_2d(X, Xi, h, func):
     res = np.dot(A, f) * h
     return res
 
-def int_fourier_3d(X,Xi,h,func):
-    A = core_3d(Xi[:,None,None],X[None,:,None],X[None,None,:])
-    f = func(X[:,None],X[None,:])
-    res = np.dot(A,f)*(h**2)
+def int_fourier_3d(X1,X2,Xi1,Xi2,h,func):
+    res = np.zeros((N,N),dtype=np.complex)
+    for i in range(N):
+        for j in range(N):
+            for k in range(N):
+                for m in range(N):
+                    A = core_3d(Xi1[i],Xi2[j],X1[k],X2[m])
+                    f = func(X1[k],X2[m])
+                    res[i][j] += A*f
+    res = res*(h**2)
     return res
 
 def gaussian(x):
@@ -88,8 +94,8 @@ def input_field_2d(x):
     return x * np.exp(-2j * x)
 
 
-def gaussian_3d(x, y):
-    return np.exp(-s * np.square(x) - p * np.square(y))
+def gaussian_3d(x1, x2):
+    return np.exp(-s * np.square(x1) - p * np.square(x2))
 
 
 def input_field_3d(x, y):
@@ -185,8 +191,9 @@ def analitical_input_field_2d(x, a):
     return 1j * (2 * (np.pi * a * x + a) * np.cos(2 * a * (np.pi * x + 1)) - np.sin(2 * (np.pi * a * x + a))) / (
                 2 * np.square(np.pi * x + 1))
 
-def analitical_input_field_3d(x,a):
-    return 0
+def analitical_input_field_3d(x1,x2,a):
+    return -(np.sin(2*np.pi*a(x1+1/np.pi))-2*np.pi*a*(x1+1/np.pi)*np.cos(2*np.pi*a*(x1+1/np.pi)))*\
+           (np.sin(2*np.pi*a(x2+1/np.pi))-2*np.pi*a*(x2+1/np.pi)*np.cos(2*np.pi*a*(x2+1/np.pi)))/(4*(np.pi**4)*np.square(x1)*np.square(x2))
 
 def input_field_print_2d():
     global N, M, hx
@@ -203,8 +210,9 @@ def input_field_print_2d():
     plot_input_2D(x_f, f)
 
 
-def plot_all_3D(param, param1):
+def plot_all_3d(xs, ys):
     pass
+
 
 
 def plot_input_3D(x_f, f):
@@ -217,12 +225,15 @@ def input_field_print_3d():
     y_f = np.linspace(-a,a,N)
     x_F = np.linspace(-b,b,N)
 
-    x_f, y_f = np.meshgrid(x_f, y_f)
+    zf = funct(x_f[:,None],y_f[None,:])
+    plt.imshow(np.abs(zf))
 
-    #zf = funct(x_f,y_f)
-    #F = fin_fft_3d(hx,zf,N,M)
-    F1 = int_fourier_3d(x_f,x_F,hx,funct)
-    F2 = analitical_input_field_3d()
+    plt.show()
+    F = fin_fft_3d(hx,zf,N,M)
+    F1 = int_fourier_3d(x_f,x_f,x_F,x_F,hx,funct)
+    x,y = np.meshgrid(x_f,x_f)
+    F2 = analitical_input_field_3d(x,y,a)
+    plt.imshow(np.abs(F))
 
     #plot_all_3D((x_F, x_F, x_F), (F, F1, F2))
 
@@ -243,6 +254,21 @@ def gaussian_print_2d():
     plot_all_2D((x_F, x_F), (F, F1))
 
     plot_input_2D(x_f, f)
+
+def gaussian_print_3d():
+    funct = gaussian_3d
+    x_f = np.linspace(-a, a, N)
+    y_f = np.linspace(-a, a, N)
+    x_F = np.linspace(-b, b, N)
+
+    zf = funct(x_f[:, None], y_f[None, :])
+    plt.imshow(zf)
+    plt.show()
+    F = fin_fft_3d(hx, zf, N, M)
+    F1 = int_fourier_3d(x_f, x_f, x_F, x_F, hx, funct)
+    x, y = np.meshgrid(x_f, x_f)
+    F2 = analitical_input_field_3d(x, y, a)
+    plt.imshow(np.abs(F))
 
 
 def main():
