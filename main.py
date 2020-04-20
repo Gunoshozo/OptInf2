@@ -33,8 +33,8 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 
 a = 5
-N = 2 ** 9
-M = 2 ** 12
+N = 2 ** 10
+M = 2 ** 13
 b = np.square(N) / (4 * a * M)
 hx = a * 2 / N
 hF = b * 2 / N
@@ -220,12 +220,12 @@ def plot_all_3d(xs, ys):
     axises = ["abs", "angle"]
     for i in range(len(xs)):
         label = labels[i]
-
+        x,x = np.meshgrid(xs[i],xs[i])
         for j in range(2):
             op, axis = ops[j], axises[j]
             target = op(ys[i])
             ax = plt.axes(projection='3d')
-            ax.plot_surface(X=xs[i], Y=xs[i], Z=target, cmap='plasma', vmin=np.nanmin(target), vmax=np.nanmax(target))
+            ax.plot_surface(X=x, Y=x.T, Z=target, cmap='plasma', vmin=np.nanmin(target), vmax=np.nanmax(target))
             ax.set_xlabel('ξ1')
             ax.set_xlabel('ξ1')
             ax.set_xlabel(axis)
@@ -248,19 +248,18 @@ def input_field_print_3d():
     X, Y = np.meshgrid(x_F, x_F)
     zf = funct(x, y)
     plt.imshow(np.abs(zf),extent=(-a,a,-a,a))
-    #
-    plt.show()
+    #plt.show()
     F = fin_fft_3d(hx, zf)
     plt.imshow(np.abs(F),extent=(-b,b,-b,b))
-    plt.show()
+    #plt.show()
     F1 = int_fourier_3d(x_f, x_F, hx, input_field_2d)
     plt.imshow(np.abs(F1),extent=(-b,b,-b,b))
-    plt.show()
+    #plt.show()
     F2 = analitical_input_field_3d(x_F[:, None], x_F[None, :], a)
     plt.imshow(np.abs(F2),extent=(-b,b,-b,b))
-    plt.show()
+    #plt.show()
 
-    # plot_all_3d((x_F, x_F, x_F), (F, F1, F2))
+    plot_all_3d((x_F, x_F, x_F), (F, F1, F2))
 
     # plot_input_3D(x_f, zf)
 
@@ -287,13 +286,13 @@ def gaussian_print_3d():
 
     zf = funct(x_f[:, None], y_f[None, :])
     plt.imshow(zf)
-    plt.show()
+    #plt.show()
     F = fin_fft_3d(hx, zf)
     plt.imshow(np.abs(F))
-    plt.show()
+    #plt.show()
     F1 = int_fourier_3d(x_f, x_F, hx, gaussian)
     plt.imshow(np.abs(F1))
-    plt.show()
+    #plt.show()
     x, y = np.meshgrid(x_f, x_f)
     F2 = analitical_input_field_3d(x, y, a)
     plt.imshow(np.abs(F))
