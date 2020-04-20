@@ -33,8 +33,8 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 
 a = 5
-N = 2048
-M = 2048*4
+N = 1<<6
+M = 1<<8
 b = np.square(N) / (4 * a * M)
 hx = a * 2 / N
 hF = b * 2 / N
@@ -76,7 +76,7 @@ def int_fourier_2d(X, Xi, h, func):
 def int_fourier_3d(X, Xi, h, func):
     A = core_2d(Xi[:, None], X[None, :])
     f = func(X)
-    res = np.dot(A, f) * h**2
+    res = np.dot(A, f) * h
     res1 = np.copy(res)
     return np.dot(res[:, None], res1[None, :])
 
@@ -275,7 +275,7 @@ def input_field_print_3d():
     plt.savefig(labels[1] + labels2[1])
     plt.close()
     #plt.show()
-    F1 = int_fourier_3d(x_f, x_f, hx, input_field_2d)
+    F1 = int_fourier_3d(x_f, x_F, hx, input_field_2d)
     plt.imshow(np.abs(F1),extent=(-b,b,-b,b), cmap='plasma')
     plt.colorbar()
     plt.savefig(labels[2] + labels2[0])
@@ -286,7 +286,7 @@ def input_field_print_3d():
     plt.savefig(labels[2] + labels2[1])
     plt.close()
     #plt.show()
-    F2 = analitical_input_field_3d1(x_F, x_F, a)
+    F2 = analitical_input_field_3d(x_F[None,:], x_F[:,None], a)
     plt.imshow(np.abs(F2),extent=(-b,b,-b,b), cmap='plasma')
     plt.savefig(labels[3] + labels2[0])
     plt.close()
