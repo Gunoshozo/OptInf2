@@ -33,8 +33,8 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 
 a = 5
-N = 2 ** 10
-M = 2 ** 13
+N = 2048
+M = 2048*4
 b = np.square(N) / (4 * a * M)
 hx = a * 2 / N
 hF = b * 2 / N
@@ -76,7 +76,7 @@ def int_fourier_2d(X, Xi, h, func):
 def int_fourier_3d(X, Xi, h, func):
     A = core_2d(Xi[:, None], X[None, :])
     f = func(X)
-    res = np.dot(A, f) * h
+    res = np.dot(A, f) * h**2
     res1 = np.copy(res)
     return np.dot(res[:, None], res1[None, :])
 
@@ -193,10 +193,15 @@ def analitical_input_field_2d(x, a):
             2 * np.square(np.pi * x + 1))
 
 
+
 def analitical_input_field_3d(x1, x2, a):
-    return -(2 * (np.pi * a * x1 + a) * np.cos(2 * a * (np.pi * x1 + 1)) - np.sin(2 * (np.pi * a * x1 + a))) * \
+    return np.array(-(2 * (np.pi * a * x1 + a) * np.cos(2 * a * (np.pi * x1 + 1)) - np.sin(2 * (np.pi * a * x1 + a))) * \
            (2 * (np.pi * a * x2 + a) * np.cos(2 * a * (np.pi * x2 + 1)) - np.sin(2 * (np.pi * a * x2 + a))) \
-           / (4 * np.square(np.pi * x1 + 1) * np.square(np.pi * x2 + 1))
+           / (4 * np.square(np.pi * x1 + 1) * np.square(np.pi * x2 + 1)),dtype=np.complex128)
+
+def analitical_input_field_3d1(x1, x2, a):
+    return np.dot(analitical_input_field_2d(x1,a)[:, None], analitical_input_field_2d(x2,a)[None, :])
+
 
 
 def input_field_print_2d():
@@ -230,7 +235,7 @@ def plot_all_3d(xs, ys):
             ax.set_xlabel('ξ1')
             ax.set_xlabel(axis)
             plt.savefig(label + ' ' + axis + '.png')
-            plt.show()
+            #plt.show()
             plt.close()
 
 
@@ -240,6 +245,8 @@ def plot_input_3D(x_f, f):
 
 def input_field_print_3d():
     funct = input_field_3d
+    labels = ["исходная функция ", "через бпф ", "через интеграл ","аналитически "]
+    labels2 = ["амплитуда", "фаза"]
     x_f = np.linspace(-a, a, N)
     y_f = np.linspace(-a, a, N)
     x_F = np.linspace(-b, b, N)
@@ -247,18 +254,47 @@ def input_field_print_3d():
     x, y = np.meshgrid(x_f, y_f)
     X, Y = np.meshgrid(x_F, x_F)
     zf = funct(x, y)
-    plt.imshow(np.abs(zf),extent=(-a,a,-a,a))
-    plt.show()
-    plt.imshow(np.angle(zf),extent=(-a,a,-a,a))
-    plt.show()
+    plt.imshow(np.abs(zf),extent=(-a,a,-a,a), cmap='plasma')
+    plt.colorbar()
+    plt.savefig(labels[0]+labels2[0])
+    plt.close()
+    #plt.show()
+    plt.imshow(np.angle(zf),extent=(-a,a,-a,a), cmap='plasma')
+    plt.colorbar()
+    plt.savefig(labels[0] + labels2[1])
+    plt.close()
+    #plt.show()
     F = fin_fft_3d(hx, zf)
-    plt.imshow(np.abs(F),extent=(-b,b,-b,b))
+    plt.imshow(np.abs(F),extent=(-b,b,-b,b), cmap='plasma')
+    plt.colorbar()
+    plt.savefig(labels[1] + labels2[0])
+    plt.close()
     #plt.show()
-    F1 = int_fourier_3d(x_f, x_F, hx, input_field_2d)
-    plt.imshow(np.abs(F1),extent=(-b,b,-b,b))
+    plt.imshow(np.angle(F), extent=(-b,b,-b,b), cmap='plasma')
+    plt.colorbar()
+    plt.savefig(labels[1] + labels2[1])
+    plt.close()
     #plt.show()
-    F2 = analitical_input_field_3d(x_F[:, None], x_F[None, :], a)
-    plt.imshow(np.abs(F2),extent=(-b,b,-b,b))
+    F1 = int_fourier_3d(x_f, x_f, hx, input_field_2d)
+    plt.imshow(np.abs(F1),extent=(-b,b,-b,b), cmap='plasma')
+    plt.colorbar()
+    plt.savefig(labels[2] + labels2[0])
+    plt.close()
+    #plt.show()
+    plt.imshow(np.angle(F1), extent=(-b,b,-b,b), cmap='plasma')
+    plt.colorbar()
+    plt.savefig(labels[2] + labels2[1])
+    plt.close()
+    #plt.show()
+    F2 = analitical_input_field_3d1(x_F, x_F, a)
+    plt.imshow(np.abs(F2),extent=(-b,b,-b,b), cmap='plasma')
+    plt.savefig(labels[3] + labels2[0])
+    plt.close()
+    #plt.show()
+    plt.imshow(np.angle(F2), extent=(-b,b,-b,b), cmap='plasma')
+    plt.colorbar()
+    plt.savefig(labels[3] + labels2[1])
+    plt.close()
     #plt.show()
 
     plot_all_3d((x_F, x_F, x_F), (F, F1, F2))
@@ -296,7 +332,7 @@ def gaussian_print_3d():
     plt.imshow(np.abs(F1))
     #plt.show()
     x, y = np.meshgrid(x_f, x_f)
-    F2 = analitical_input_field_3d(x, y, a)
+    F2 = analitical_input_field_3d1(x, y, a)
     plt.imshow(np.abs(F))
 
 
